@@ -101,4 +101,3 @@ def transcribe_audio_with_whisper(audio_file_path: str, language_name: str, mode
         return None, f"Error: Audio file not found at {audio_file_path}"
     except Exception as e:
         return None, f"Error during audio transcription: {e}"
-```

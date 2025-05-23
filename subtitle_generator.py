@@ -1,4 +1,5 @@
-import pysrt
+import srt # Changed from pysrt
+import datetime # Added for timedelta
 import math
 import logging
 
@@ -22,7 +23,7 @@ def format_ass_time(seconds: float) -> str:
 
 def generate_srt(transcription_result: dict, output_srt_path: str) -> bool:
     """
-    Generates an SRT subtitle file from Whisper's transcription result using pysrt.
+    Generates an SRT subtitle file from Whisper's transcription result using the 'srt' library.
 
     Args:
         transcription_result: The result dictionary from Whisper's transcribe method.
@@ -35,8 +36,8 @@ def generate_srt(transcription_result: dict, output_srt_path: str) -> bool:
         logging.error("Invalid or empty transcription result for SRT generation.")
         return False
 
+    subtitle_objects = []
     try:
-        subs = pysrt.SubRipFile()
         for i, segment in enumerate(transcription_result['segments']):
             start_time_s = segment.get('start')
             end_time_s = segment.get('end')
@@ -46,15 +47,22 @@ def generate_srt(transcription_result: dict, output_srt_path: str) -> bool:
                 logging.warning(f"Skipping segment {i} due to missing start/end times.")
                 continue
 
-            item = pysrt.SubRipItem(
+            start_delta = datetime.timedelta(seconds=start_time_s)
+            end_delta = datetime.timedelta(seconds=end_time_s)
+
+            sub = srt.Subtitle(
                 index=i + 1,
-                start=pysrt.SubRipTime.from_ordinal(int(start_time_s * 1000)), # pysrt expects milliseconds
-                end=pysrt.SubRipTime.from_ordinal(int(end_time_s * 1000)),
-                text=text
+                start=start_delta,
+                end=end_delta,
+                content=text
             )
-            subs.append(item)
+            subtitle_objects.append(sub)
         
-        subs.save(output_srt_path, encoding='utf-8')
+        srt_content = srt.compose(subtitle_objects)
+        
+        with open(output_srt_path, 'w', encoding='utf-8') as f:
+            f.write(srt_content)
+            
         logging.info(f"SRT file successfully generated at {output_srt_path}")
         return True
     except Exception as e:
@@ -155,3 +163,4 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 #     print(format_ass_time(7322.01)) # 2:02:02.01
 #     print(format_ass_time(-10)) # Invalid input check
 #     print(format_ass_time("abc"))# Invalid input check
+```
