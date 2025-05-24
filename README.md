@@ -1,111 +1,62 @@
-# videocr
+# AI Subtitle Generator
 
-Extract hardcoded (burned-in) subtitles from videos using the [Tesseract](https://github.com/tesseract-ocr/tesseract) OCR engine with Python.
+## 1. Overview
+A brief description of the application: This Python application provides a graphical user interface (GUI) to generate subtitles (SRT or ASS format) from the audio track of a video file using the OpenAI Whisper speech-to-text model. It supports multiple languages and is optimized for use with NVIDIA GPUs.
 
-Input a video with hardcoded subtitles:
+## 2. System Requirements
+- **Operating System:** Windows 10 (Tested on this OS).
+- **Python:** Python 3.8 - 3.11 recommended.
+- **Hardware (Recommended for optimal performance):**
+    - RAM: 16GB+ (48GB available on test machine)
+    - CPU: Modern multi-core CPU (e.g., Intel Core i5 9th gen or equivalent/better)
+    - GPU: NVIDIA GPU with CUDA support (e.g., RTX 3060 12GB or similar/better) for significantly faster processing. CPU-only mode is also supported but will be much slower.
+- **Key Dependencies (Software):**
+    - **FFmpeg:** This is **CRITICAL**. FFmpeg must be installed on your system and accessible from the command line (i.e., added to your system's PATH environment variable).
+        - Download FFmpeg from: [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+    - **NVIDIA CUDA Toolkit (Optional, for GPU acceleration):** If you have an NVIDIA GPU and want the best performance, install the CUDA Toolkit version compatible with PyTorch (which Whisper uses).
+        - Download CUDA Toolkit from: [https://developer.nvidia.com/cuda-downloads](https://developer.nvidia.com/cuda-downloads)
+        - *The application will automatically attempt to use the GPU if CUDA is correctly set up and fall back to CPU otherwise.* An informational comment about this is included in `main_gui.py`.
 
-<p float="left">
-  <img width="430" alt="screenshot" src="https://user-images.githubusercontent.com/10210967/56873658-3b76dd00-6a34-11e9-95c6-cd6edc721f58.png">
-  <img width="430" alt="screenshot" src="https://user-images.githubusercontent.com/10210967/56873659-3b76dd00-6a34-11e9-97aa-2c3e96fe3a97.png">
-</p>
+## 3. Setup Instructions
+1.  **Create a Virtual Environment (Recommended):**
+    Open a command prompt or PowerShell in the project's root directory (where this README is located).
+    ```bash
+    python -m venv venv
+    ```
+2.  **Activate the Virtual Environment:**
+    ```bash
+    venv\Scripts\activate
+    ```
+3.  **Install Python Dependencies:**
+    Ensure `requirements.txt` is in the same directory.
+    ```bash
+    pip install -r requirements.txt
+    ```
+    This will install `openai-whisper`, `moviepy`, `pysrt`, and their dependencies (like `torch`).
 
-```python
-# example.py
-
-from videocr import get_subtitles
-
-if __name__ == '__main__':  # This check is mandatory for Windows.
-    print(get_subtitles('video.mp4', lang='chi_sim+eng', sim_threshold=70, conf_threshold=65))
-```
-
-`$ python3 example.py`
-
-Output:
-
-``` 
-0
-00:00:01,042 --> 00:00:02,877
-喝 点 什么 ? 
-What can I get you?
-
-1
-00:00:03,044 --> 00:00:05,463
-我 不 知道
-Um, I'm not sure.
-
-2
-00:00:08,091 --> 00:00:10,635
-休闲 时 光 …
-For relaxing times, make it...
-
-3
-00:00:10,677 --> 00:00:12,595
-三 得 利 时 光
-Bartender, Bob Suntory time.
-
-4
-00:00:14,472 --> 00:00:17,142
-我 要 一 杯 伏特 加
-Un, I'll have a vodka tonic.
-
-5
-00:00:18,059 --> 00:00:19,019
-谢谢
-Laughs Thanks.
-```
-
-## Performance
-
-The OCR process is CPU intensive. It takes 3 minutes on my dual-core laptop to extract a 20 seconds video. More CPU cores will make it faster.
-
-## Installation
-
-1. Install [Tesseract](https://github.com/tesseract-ocr/tesseract/wiki) and make sure it is in your `$PATH`
-
-2. `$ pip install videocr`
-
-## API
-
-1. Return subtitle string in SRT format
-    ```python
-    get_subtitles(
-        video_path: str, lang='eng', time_start='0:00', time_end='',
-        conf_threshold=65, sim_threshold=90, use_fullframe=False)
+## 4. Running the Application
+1.  Make sure your virtual environment is activated.
+2.  Navigate to the project's root directory in your command prompt or PowerShell.
+3.  Run the main GUI script:
+    ```bash
+    python main_gui.py
     ```
 
-2. Write subtitles to `file_path`
-    ```python
-    save_subtitles_to_file(
-        video_path: str, file_path='subtitle.srt', lang='eng', time_start='0:00', time_end='',
-        conf_threshold=65, sim_threshold=90, use_fullframe=False)
-    ```
+## 5. How to Use
+1.  **Browse for Video:** Click the "Browse..." button to select your video file.
+2.  **Select Language:** Choose the language spoken in the video from the dropdown menu.
+    - *Note on Portuguese:* "Portuguese (European)" and "Portuguese (Brazilian)" options are provided for clarity; both use Whisper's general "portuguese" model. The transcription will reflect the dialect in the audio.
+3.  **Choose Output Format:** Select either SRT or ASS.
+4.  **Generate Subtitles:** Click the "Generate Subtitles" button.
+    - The process may take some time, especially for long videos or if running on CPU. The GUI will show progress and status updates.
+    - The first time you use a specific Whisper model or language, the model files will be downloaded, which can take a while depending on your internet speed. Subsequent uses will be faster as the model will be cached.
+5.  **Output:** The generated subtitle file (.srt or .ass) will be saved in the same directory as the input video file, with the same base name.
 
-### Parameters
-
-- `lang`
-
-  The language of the subtitles. You can extract subtitles in almost any language. All language codes on [this page](https://github.com/tesseract-ocr/tesseract/wiki/Data-Files#data-files-for-version-400-november-29-2016) (e.g. `'eng'` for English) and all script names in [this repository](https://github.com/tesseract-ocr/tessdata_fast/tree/master/script) (e.g. `'HanS'` for simplified Chinese) are supported.
-  
-  Note that you can use more than one language, e.g. `lang='hin+eng'` for Hindi and English together. 
-  
-  Language files will be automatically downloaded to your `~/tessdata`. You can read more about Tesseract language data files on their [wiki page](https://github.com/tesseract-ocr/tesseract/wiki/Data-Files).
-
-- `conf_threshold`
-
-  Confidence threshold for word predictions. Words with lower confidence than this value will be discarded. The default value `65` is fine for most cases. 
-
-  Make it closer to 0 if you get too few words in each line, or make it closer to 100 if there are too many excess words in each line.
-
-- `sim_threshold`
-
-  Similarity threshold for subtitle lines. Subtitle lines with larger [Levenshtein](https://en.wikipedia.org/wiki/Levenshtein_distance) ratios than this threshold will be merged together. The default value `90` is fine for most cases.
-
-  Make it closer to 0 if you get too many duplicated subtitle lines, or make it closer to 100 if you get too few subtitle lines.
-
-- `time_start` and `time_end`
-
-  Extract subtitles from only a clip of the video. The subtitle timestamps are still calculated according to the full video length.
-
-- `use_fullframe`
-
-  By default, only the bottom half of each frame is used for OCR. You can explicitly use the full frame if your subtitles are not within the bottom half of each frame.
+## 6. Troubleshooting & Notes
+- **FFmpeg Not Found:** The application checks for FFmpeg at startup. If it's not found or not in PATH, an error message will be displayed, and the generation feature will be disabled. Please ensure FFmpeg is correctly installed.
+- **GPU Not Used:** If you have an NVIDIA GPU but it's not being used (check Task Manager > Performance > GPU, or use `nvidia-smi` if familiar):
+    - Ensure your NVIDIA drivers are up to date.
+    - Ensure you have installed the correct CUDA Toolkit version compatible with the PyTorch version that `openai-whisper` installed.
+    - The application logs a message to the console if it falls back to CPU mode.
+- **Model Downloads:** Whisper models are downloaded to a cache directory (usually `~/.cache/whisper` or as per Whisper's documentation).
+- **Permissions:** Ensure the application has read permissions for the input video and write permissions for the directory where the video is located (to save the subtitle file and temporary audio).
